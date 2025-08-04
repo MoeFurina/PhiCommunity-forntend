@@ -21,7 +21,7 @@ jobs:
           rm -rf !(.git)
           
       - name: Clone PhiCommunity repository
-        run: git clone https://github.com/MoeFurina/PhiCommunity.git .
+        run: git clone https://github.com/MoeFurina/PhiCommunity.git ./docs
           
       - name: Setup Node.js with pnpm
         uses: actions/setup-node@v4
@@ -34,18 +34,7 @@ jobs:
         
       - name: Build project
         run: npm run build
-        
-      - name: Prepare for deployment
-        run: |
 
-          # 移动dist内容到根目录
-          shopt -s dotglob
-          mv dist/* ./
-          rmdir dist
-          
-          # 清理临时目录
-          rm -rf temp-source
-          
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
