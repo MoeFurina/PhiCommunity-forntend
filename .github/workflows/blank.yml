@@ -1,0 +1,49 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]  # 根据需要修改触发分支
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout current repository
+        uses: actions/checkout@v4
+        
+      - name: Clone PhiCommunity repository
+        run: git clone https://github.com/MoeFurina/PhiCommunity.git .
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'  # 根据项目需要调整 Node.js 版本
+          cache: 'pnpm'
+          
+      - name: Install pnpm
+        run: npm install -g pnpm
+          
+      - name: Install dependencies
+        run: pnpm install
+        
+      - name: Build project
+        run: pnpm build
+        
+      - name: Move dist contents to root
+        run: |
+          # 删除不需要的文件（保留 .git 和 .github 目录）
+          shopt -s extglob
+          rm -rf !(.git|.github)
+          
+          # 移动 dist 目录内容到根目录
+          cp -a dist/. .
+          
+          # 清理 dist 目录
+          rm -rf dist
+          
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
