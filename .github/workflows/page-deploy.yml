@@ -27,19 +27,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
-          
-      - name: Install pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@latest --activate
-          echo "$(dirname $(which pnpm))" >> $GITHUB_PATH
+          cache: 'npm'
           
       - name: Install dependencies
-        run: pnpm install
+        run: npm install
         
       - name: Build project
-        run: pnpm build
+        run: npm run build
         
       - name: Prepare for deployment
         run: |
