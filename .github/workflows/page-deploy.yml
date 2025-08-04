@@ -37,9 +37,7 @@ jobs:
         
       - name: Prepare for deployment
         run: |
-          # 恢复我们自己的.github目录（包含工作流文件）
-          cp -a temp-source/.github ./
-          
+
           # 移动dist内容到根目录
           shopt -s dotglob
           mv dist/* ./
