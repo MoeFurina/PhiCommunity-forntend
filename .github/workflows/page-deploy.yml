@@ -12,21 +12,28 @@ jobs:
       - name: Checkout current repository
         uses: actions/checkout@v4
         with:
-          path: 'temp-source'  # 先检出到子目录
+          path: 'temp-source'
         
-      - name: Clone PhiCommunity repository
+      - name: Clean workspace
         run: |
-          rm -rf * .[!.]*  # 清除当前目录内容（除了.git目录）
-          git clone https://github.com/MoeFurina/PhiCommunity.git .
+          # 清除当前目录内容（保留.git目录）
+          shopt -s extglob
+          rm -rf !(.git)
           
-      - name: Set up Node.js
+      - name: Clone PhiCommunity repository
+        run: git clone https://github.com/MoeFurina/PhiCommunity.git .
+          
+      - name: Setup Node.js with pnpm
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
           
       - name: Install pnpm
-        run: npm install -g pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+          echo "$(dirname $(which pnpm))" >> $GITHUB_PATH
           
       - name: Install dependencies
         run: pnpm install
@@ -34,20 +41,18 @@ jobs:
       - name: Build project
         run: pnpm build
         
-      - name: Move dist contents to root
+      - name: Prepare for deployment
         run: |
-          # 备份克隆的仓库内容（如果需要）
-          mkdir -p original-source
-          cp -a !(original-source|temp-source) original-source/
-          
-          # 恢复我们自己的源文件
+          # 恢复我们自己的.github目录（包含工作流文件）
           cp -a temp-source/.github ./
           
-          # 移动 dist 目录内容到根目录
-          cp -a dist/. .
+          # 移动dist内容到根目录
+          shopt -s dotglob
+          mv dist/* ./
+          rmdir dist
           
-          # 清理不需要的目录
-          rm -rf dist original-source temp-source
+          # 清理临时目录
+          rm -rf temp-source
           
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
