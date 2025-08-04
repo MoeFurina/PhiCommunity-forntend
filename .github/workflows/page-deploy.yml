@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ]  # 根据需要修改触发分支
+    branches: [ main ]
 
 jobs:
   deploy:
@@ -11,14 +11,18 @@ jobs:
     steps:
       - name: Checkout current repository
         uses: actions/checkout@v4
+        with:
+          path: 'temp-source'  # 先检出到子目录
         
       - name: Clone PhiCommunity repository
-        run: git clone https://github.com/MoeFurina/PhiCommunity.git .
-        
+        run: |
+          rm -rf * .[!.]*  # 清除当前目录内容（除了.git目录）
+          git clone https://github.com/MoeFurina/PhiCommunity.git .
+          
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'  # 根据项目需要调整 Node.js 版本
+          node-version: '20'
           cache: 'pnpm'
           
       - name: Install pnpm
@@ -32,15 +36,18 @@ jobs:
         
       - name: Move dist contents to root
         run: |
-          # 删除不需要的文件（保留 .git 和 .github 目录）
-          shopt -s extglob
-          rm -rf !(.git|.github)
+          # 备份克隆的仓库内容（如果需要）
+          mkdir -p original-source
+          cp -a !(original-source|temp-source) original-source/
+          
+          # 恢复我们自己的源文件
+          cp -a temp-source/.github ./
           
           # 移动 dist 目录内容到根目录
           cp -a dist/. .
           
-          # 清理 dist 目录
-          rm -rf dist
+          # 清理不需要的目录
+          rm -rf dist original-source temp-source
           
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
